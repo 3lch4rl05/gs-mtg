@@ -14,6 +14,10 @@ At the top of the script, you can set the column numbers where you want the info
 3. The multiverse ID column has already a value in it.
 4. The active row is below the `STARTING_ROW`.
 
+In case you provide invalid values for the card name or set code, the script will let you know by setting the font color to red like shown in the image below. You just need to update the colum with the correct information and it will update it for you.
+
+<img src="/images/ss3.png" width="500px">
+
 I have also included some menu items to make it easier to refresh prices and jump to the last row.
 
 <img src="/images/ss2.png" width="500px">
