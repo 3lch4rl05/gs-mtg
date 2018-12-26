@@ -1,6 +1,7 @@
 var ss = SpreadsheetApp.getActiveSpreadsheet();
 var sheet = ss.getSheetByName("Coleccion");
 
+var MINIMUM_LENGTH = 3;
 var STARTING_ROW = 3;
 var MULTIVERSEID_COL = 2;
 var NAME_COL = 5;
@@ -42,14 +43,14 @@ function fetchCard(e) {
   
   if(sheet.getRange(row,MULTIVERSEID_COL).getValue().length == 0) {
     if(col == NAME_COL || col == SET_COL) {
-      if(row >= 3) {
-        if(val.length >= 3) {
+      if(row >= STARTING_ROW) {
+        if(val.length >= MINIMUM_LENGTH) {
           if(col == NAME_COL) {
-            if(valSerie.length >= 3) {
+            if(valSerie.length >= MINIMUM_LENGTH) {
               cardInfo = getCardInfo(val,valSerie);
             }
           } else if(col == SET_COL) {
-            if(valNombre.length >= 3) {
+            if(valNombre.length >= MINIMUM_LENGTH) {
               cardInfo = getCardInfo(valNombre, val);
             }
           }
@@ -94,8 +95,8 @@ function fetchCard(e) {
         }
       }
     }
-    sheet.getRange(row, COLOR_COL).setValue(colorCS);
     
+    sheet.getRange(row, COLOR_COL).setValue(colorCS);
     sheet.setRowHeight(row, 177);
     sheet.setColumnWidth(IMAGE_COL, 127);
     
@@ -129,7 +130,7 @@ function refreshRow(row) {
 }
 
 function refreshPrices() {
-  
+  //waiting on my token approval...
 }
 
 function refreshAll() {
