@@ -16,7 +16,7 @@ At the top of the script, you can set the column numbers where you want the info
 
 I have also included some menu items to make it easier to refresh prices and jump to the last row.
 
-![Menu item example](/images/ss2.png | =250x100)
+<img src="/images/ss2.png" width="200">
 
 This script uses the awesome MTG API provided by [magicthegathering.io](https://magicthegathering.io/) Please consider becoming a [patron](https://www.patreon.com/magicthegathering) to support it!
 
