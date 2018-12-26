@@ -1,5 +1,5 @@
 var ss = SpreadsheetApp.getActiveSpreadsheet();
-var sheet = ss.getSheetByName("collection");
+var sheet = ss.getSheetByName("Coleccion");
 
 var STARTING_ROW = 3;
 var MULTIVERSEID_COL = 2;
@@ -12,6 +12,18 @@ var TYPE_COL = 10;
 var RARITY_COL = 11;
 var IMAGE_COL = 12;
 var COLOR_COL = 13;
+
+function onOpen(e) {
+  
+  var ui = SpreadsheetApp.getUi();
+  ui.createMenu("Utils")
+    .addItem("Jump to last", "jumpToLast")
+    .addSeparator()
+    .addSubMenu(SpreadsheetApp.getUi().createMenu('Refresh')
+      .addItem("Refresh Prices", "refreshPrices")
+      .addItem("Refresh All", "refreshAll"))
+    .addToUi();
+}
 
 function fetchCard(e) {
 
@@ -116,6 +128,10 @@ function refreshRow(row) {
   fetchCard(e);
 }
 
+function refreshPrices() {
+  
+}
+
 function refreshAll() {
 
   Logger.log("Refreshing all cards info...");
@@ -123,3 +139,7 @@ function refreshAll() {
     refreshRow(i);
   }
 }
+
+function jumpToLast() {
+   sheet.setActiveRange(sheet.getRange(sheet.getLastRow(),3));
+}  
