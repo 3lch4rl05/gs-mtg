@@ -1,5 +1,6 @@
 var ss = SpreadsheetApp.getActiveSpreadsheet();
 var sheet = ss.getSheetByName("Collection");
+var ui = SpreadsheetApp.getUi();
 
 var MINIMUM_LENGTH = 3;
 var STARTING_ROW = 3;
@@ -47,6 +48,7 @@ function fetchCardData(e) {
     if(cardInfo && cardInfo.cards.length>0) {
     
       var card = cardInfo.cards[0];
+      var rarityLetter = card.rarity.charAt(0);
       
       //Multiverse ID
       sheet.getRange(row, MULTIVERSEID_COL).setValue(card.multiverseid);
@@ -55,7 +57,7 @@ function fetchCardData(e) {
       sheet.getRange(row, SETNAME_COL).setValue(card.setName);
       
       //Set icon
-      sheet.getRange(row, SETICON_COL).setValue("=IMAGE(\"http://gatherer.wizards.com/Handlers/Image.ashx?type=symbol&set=" + card.set + "&size=medium\")");
+      sheet.getRange(row, SETICON_COL).setValue("=IMAGE(\"http://gatherer.wizards.com/Handlers/Image.ashx?type=symbol&set=" + card.set + "&size=medium&rarity=" + rarityLetter + "\")");
       
       //Card number
       sheet.getRange(row, NUMBER_COL).setValue(card.number);
@@ -105,6 +107,10 @@ function getCardInfo(name, set) {
   return data;
 }
 
+function refreshPrices() {
+  //waiting on my token approval...
+}
+
 function refreshRow(row) {
   
   Logger.log("Refreshing row: " + row);
@@ -116,16 +122,18 @@ function refreshRow(row) {
   fetchCardData(e);
 }
 
-function refreshPrices() {
-  //waiting on my token approval...
+function refreshFromRow(row) {
+
+  Logger.log("Refreshing cards info from row " + row + "...");
+  for(var i=row; i<=sheet.getLastRow(); i++) {
+    refreshRow(i);
+  }
 }
 
 function refreshAll() {
 
   Logger.log("Refreshing all cards info...");
-  for(var i=STARTING_ROW; i<=sheet.getLastRow(); i++) {
-    refreshRow(i);
-  }
+  refreshFromRow(STARTING_ROW);
 }
 
 function jumpToLast() {
@@ -134,12 +142,27 @@ function jumpToLast() {
 
 function onOpen(e) {
   
-  var ui = SpreadsheetApp.getUi();
   ui.createMenu("Utils")
     .addItem("Jump to last", "jumpToLast")
     .addSeparator()
     .addSubMenu(SpreadsheetApp.getUi().createMenu('Refresh')
-      .addItem("Refresh Prices", "refreshPrices")
+      .addItem("Refresh Row", "askForRowToRefresh")
+      .addItem("Refresh From Row", "askForRowRefreshFrom")
+      .addItem("Refresh Prices Only", "refreshPrices")
       .addItem("Refresh All", "refreshAll"))
     .addToUi();
+}
+
+function askForRow() {
+  var response = ui.prompt("Row number:");
+  return response.getResponseText();
+  
+}
+
+function askForRowToRefresh() {
+  refreshRow(askForRow());
+}
+
+function askForRowRefreshFrom() {
+  refreshFromRow(askForRow());
 }
