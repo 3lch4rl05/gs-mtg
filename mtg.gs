@@ -1,5 +1,5 @@
 var ss = SpreadsheetApp.getActiveSpreadsheet();
-var sheet = ss.getSheetByName("Coleccion");
+var sheet = ss.getSheetByName("Collection");
 
 var MINIMUM_LENGTH = 3;
 var STARTING_ROW = 3;
@@ -14,104 +14,91 @@ var RARITY_COL = 11;
 var IMAGE_COL = 12;
 var COLOR_COL = 13;
 
-function onOpen(e) {
-  
-  var ui = SpreadsheetApp.getUi();
-  ui.createMenu("Utils")
-    .addItem("Jump to last", "jumpToLast")
-    .addSeparator()
-    .addSubMenu(SpreadsheetApp.getUi().createMenu('Refresh')
-      .addItem("Refresh Prices", "refreshPrices")
-      .addItem("Refresh All", "refreshAll"))
-    .addToUi();
-}
+var IMG_HEIGHT = 152;
+var IMG_WIDTH = 106;
 
-function fetchCard(e) {
+function fetchCardData(e) {
 
   var range = e.range;
   var a1 = range.getA1Notation();
   var col = range.getColumn();
   var row = range.getRow();
-  var val = range.getValue();
-  var cardInfo;
+  var fireCall = false;
   
-  var celdaNombre = sheet.getRange(row, NAME_COL);
-  var celdaSerie = sheet.getRange(row, SET_COL);
-  
-  var valNombre = celdaNombre.getValue();
-  var valSerie = celdaSerie.getValue();
+  Logger.log("Activated on edit for range: " + a1);
+  var name = sheet.getRange(row, NAME_COL);
+  var set = sheet.getRange(row, SET_COL);
   
   if(sheet.getRange(row,MULTIVERSEID_COL).getValue().length == 0) {
-    if(col == NAME_COL || col == SET_COL) {
-      if(row >= STARTING_ROW) {
-        if(val.length >= MINIMUM_LENGTH) {
-          if(col == NAME_COL) {
-            if(valSerie.length >= MINIMUM_LENGTH) {
-              cardInfo = getCardInfo(val,valSerie);
-            }
-          } else if(col == SET_COL) {
-            if(valNombre.length >= MINIMUM_LENGTH) {
-              cardInfo = getCardInfo(valNombre, val);
-            }
-          }
+    if(row >= STARTING_ROW) {
+      if(col == NAME_COL || col == SET_COL) {
+        if(name.getValue().length >= MINIMUM_LENGTH 
+          && set.getValue().length >= MINIMUM_LENGTH) {
+          Logger.log("Call fired");
+          fireCall = true;
         }
       }
     }
   }
   
-  if(cardInfo.cards.length>0) {
+  if(fireCall == true) {
   
-    var card = cardInfo.cards[0];
+    var cardInfo = getCardInfo(name.getValue(), set.getValue());    
+    if(cardInfo && cardInfo.cards.length>0) {
     
-    //Multiverse ID
-    sheet.getRange(row, MULTIVERSEID_COL).setValue(card.multiverseid);
-    
-    //Set name
-    sheet.getRange(row, SETNAME_COL).setValue(card.setName);
-    
-    //Set icon
-    sheet.getRange(row, SETICON_COL).setValue("=IMAGE(\"http://gatherer.wizards.com/Handlers/Image.ashx?type=symbol&set=" + card.set + "&size=medium\")");
-    
-    //Card number
-    sheet.getRange(row, NUMBER_COL).setValue(card.number);
-    
-    //Type
-    sheet.getRange(row, TYPE_COL).setValue(card.originalType);
-    
-    //Rarity
-    sheet.getRange(row, RARITY_COL).setValue(card.rarity);
-    
-    //Image
-    sheet.getRange(row, IMAGE_COL).setValue("=IMAGE(\"" + card.imageUrl + "\")");
-    
-    //Color
-    var colorCS = "";
-    if(card.colors) {
-      var colorsQty = card.colors.length;
-      for(var i=0; i<colorsQty; i++) {
-        colorCS = colorCS + card.colors[i];
-        if(i<(colorsQty-1)) {
-          colorCS = colorCS + ", ";
+      var card = cardInfo.cards[0];
+      
+      //Multiverse ID
+      sheet.getRange(row, MULTIVERSEID_COL).setValue(card.multiverseid);
+      
+      //Set name
+      sheet.getRange(row, SETNAME_COL).setValue(card.setName);
+      
+      //Set icon
+      sheet.getRange(row, SETICON_COL).setValue("=IMAGE(\"http://gatherer.wizards.com/Handlers/Image.ashx?type=symbol&set=" + card.set + "&size=medium\")");
+      
+      //Card number
+      sheet.getRange(row, NUMBER_COL).setValue(card.number);
+      
+      //Type
+      sheet.getRange(row, TYPE_COL).setValue(card.originalType);
+      
+      //Rarity
+      sheet.getRange(row, RARITY_COL).setValue(card.rarity);
+      
+      //Image
+      sheet.getRange(row, IMAGE_COL).setValue("=IMAGE(\"" + card.imageUrl + "\")");
+      
+      //Color
+      var colorCS = "";
+      if(card.colors) {
+        var colorsQty = card.colors.length;
+        for(var i=0; i<colorsQty; i++) {
+          colorCS = colorCS + card.colors[i];
+          if(i<(colorsQty-1)) {
+            colorCS = colorCS + ", ";
+          }
         }
       }
+      
+      sheet.getRange(row, COLOR_COL).setValue(colorCS);
+      sheet.setRowHeight(row, IMG_HEIGHT);
+      sheet.setColumnWidth(IMAGE_COL, IMG_WIDTH);
+      
+      name.setFontColor("#000000");
+      set.setFontColor("#000000");
+      
+    } else {
+    
+      name.setFontColor("#FF0000");
+      set.setFontColor("#FF0000");
     }
-    
-    sheet.getRange(row, COLOR_COL).setValue(colorCS);
-    sheet.setRowHeight(row, 177);
-    sheet.setColumnWidth(IMAGE_COL, 127);
-    
-    celdaNombre.setFontColor("#000000");
-    celdaSerie.setFontColor("#000000");
-    
-  } else {
-  
-    celdaNombre.setFontColor("#FF0000");
-    celdaSerie.setFontColor("#FF0000");
   }
 }
 
 function getCardInfo(name, set) {
 
+  Logger.log("Fetching card info for: [" + name + "," + set + "]");
   var response = UrlFetchApp.fetch("https://api.magicthegathering.io/v1/cards?name="+name+"&set="+set);
   var json = response.getContentText();
   var data = JSON.parse(response);
@@ -126,7 +113,7 @@ function refreshRow(row) {
   };
   
   sheet.getRange(row,MULTIVERSEID_COL).setValue("");
-  fetchCard(e);
+  fetchCardData(e);
 }
 
 function refreshPrices() {
@@ -143,4 +130,16 @@ function refreshAll() {
 
 function jumpToLast() {
    sheet.setActiveRange(sheet.getRange(sheet.getLastRow(),3));
-}  
+}
+
+function onOpen(e) {
+  
+  var ui = SpreadsheetApp.getUi();
+  ui.createMenu("Utils")
+    .addItem("Jump to last", "jumpToLast")
+    .addSeparator()
+    .addSubMenu(SpreadsheetApp.getUi().createMenu('Refresh')
+      .addItem("Refresh Prices", "refreshPrices")
+      .addItem("Refresh All", "refreshAll"))
+    .addToUi();
+}
