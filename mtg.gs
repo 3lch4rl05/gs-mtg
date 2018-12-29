@@ -29,11 +29,17 @@ function fetchCardData(e) {
   Logger.log("Activated on edit for range: " + a1);
   var name = sheet.getRange(row, NAME_COL);
   var set = sheet.getRange(row, SET_COL);
+  var number = sheet.getRange(row, NUMBER_COL);
   
   if(sheet.getRange(row,MULTIVERSEID_COL).getValue().length == 0) {
     if(row >= STARTING_ROW) {
-      if(col == NAME_COL || col == SET_COL) {
-        if(name.getValue().length >= MINIMUM_LENGTH 
+      if(col == NAME_COL || col == SET_COL || col == NUMBER_COL) {
+        if(number.getValue() > 0
+          && set.getValue().length >= MINIMUM_LENGTH) {
+          Logger.log("Call fired by card number!");
+          fireCall = true;
+        }
+        else if(name.getValue().length >= MINIMUM_LENGTH 
           && set.getValue().length >= MINIMUM_LENGTH) {
           Logger.log("Call fired");
           fireCall = true;
@@ -44,14 +50,22 @@ function fetchCardData(e) {
   
   if(fireCall == true) {
   
-    var cardInfo = getCardInfo(name.getValue(), set.getValue());    
+    var cardInfo = getCardInfo(name.getValue(), set.getValue(), number.getValue());    
     if(cardInfo && cardInfo.cards.length>0) {
     
       var card = cardInfo.cards[0];
-      var rarityLetter = card.rarity.charAt(0);
+      var rarityLetter = "C";
+      if(card.rarity != "Basic Land") {
+        rarityLetter = card.rarity.charAt(0); 
+      }
       
       //Multiverse ID
       sheet.getRange(row, MULTIVERSEID_COL).setValue(card.multiverseid);
+      
+      //Card name
+      if(sheet.getRange(row, NAME_COL).getValue().length == 0) {
+        sheet.getRange(row, NAME_COL).setValue(card.name);
+      }
       
       //Set name
       sheet.getRange(row, SETNAME_COL).setValue(card.setName);
@@ -73,7 +87,7 @@ function fetchCardData(e) {
       
       //Color
       var colorCS = "";
-      if(card.colors) {
+      if(!card.originalType.indexOf("Basic Land") == 0 && card.colors) {
         var colorsQty = card.colors.length;
         for(var i=0; i<colorsQty; i++) {
           colorCS = colorCS + card.colors[i];
@@ -81,6 +95,8 @@ function fetchCardData(e) {
             colorCS = colorCS + ", ";
           }
         }
+      } else {
+        colorCS = card.watermark;
       }
       
       sheet.getRange(row, COLOR_COL).setValue(colorCS);
@@ -98,10 +114,17 @@ function fetchCardData(e) {
   }
 }
 
-function getCardInfo(name, set) {
+function getCardInfo(name, set, number) {
 
-  Logger.log("Fetching card info for: [" + name + "," + set + "]");
-  var response = UrlFetchApp.fetch("https://api.magicthegathering.io/v1/cards?name="+name+"&set="+set);
+  var response;
+  if(!number) {
+    Logger.log("Fetching card info for: [" + name + "," + set + "]");
+    response = UrlFetchApp.fetch("https://api.magicthegathering.io/v1/cards?name="+name+"&set="+set);
+  } else {
+    Logger.log("Fetching card info for: [" + set + "," + number + "]");
+    response = UrlFetchApp.fetch("https://api.magicthegathering.io/v1/cards?number="+number+"&set="+set);
+  }
+  
   var json = response.getContentText();
   var data = JSON.parse(response);
   return data;
