@@ -24,7 +24,7 @@ __For all scenarios__
 * The multiverse ID column is empty.
 * The active row is greater than the `STARTING_ROW`.
 
-In case you provide invalid values for the card name, set code or card number, the script will let you know by setting the font color to red like shown in the image below. You just need to update the colum with the correct information and it will update it for you.
+In case you provide invalid values for the card name, set code or card number, the script will let you know by setting the font color to red like shown in the image below. You just need to update the colum with the correct information and it will update the rest for you.
 
 <img src="/images/ss3.png" width="500px">
 
