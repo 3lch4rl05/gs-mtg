@@ -7,14 +7,24 @@ The [mtg.gs](mtg.gs) script is intended to be used inside a Google Sheet app scr
 
 To use this script, you will need to "install" an event trigger. Please read [this Google tutorial](https://developers.google.com/apps-script/guides/triggers/installable) to learn how to do it. It will trigger on **edit** events. If you use a simple trigger and try to override the `onEdit(e)` function, it will throw an error stating that you don't have permissions to execute `UrlFetchApp.fetch` function from inside a simple trigger due its restrictions, that's why you need to use an "installable" trigger instead. Please read [this](https://developers.google.com/apps-script/guides/triggers/) for more info on triggers and how to use them.
 
-At the top of the script, you can set the column numbers where you want the info to show up. To trigger the API call, you just need to provide the card name and set code in the respective column and that's it! The script will fetch all the info for you. If you pay attention to the code, you will notice that the API call with not be triggered if any of the following are true:
+At the top of the script, you can set the column numbers where you want the info to show up. To trigger the API call, you just need to provide the card name and set code, or the set code and card number in the respective columns and that's it! The script will fetch the rest of the info for you. If you pay attention to the code, you will notice that the API call will be triggered only if:
 
-1. The card name length is less than 3 characters.
-2. The set code length is less than 3 characters.
-3. The multiverse ID column has already a value in it.
-4. The active row is less than the `STARTING_ROW`.
+__Fetching by card name and set code__  
 
-In case you provide invalid values for the card name or set code, the script will let you know by setting the font color to red like shown in the image below. You just need to update the colum with the correct information and it will update it for you.
+1. The card name length is equal or longer than 3 characters.
+2. The set code length is equal or longer than 3 characters.
+
+__Fetching by card number and set code__
+
+1. The card number is greater than 0 (zero).
+2. The set code length is equal or longer than 3 characters.
+
+__For all scenarios__
+
+* The multiverse ID column has already a value in it.
+* The active row is less than the `STARTING_ROW`.
+
+In case you provide invalid values for the card name, set code or card number, the script will let you know by setting the font color to red like shown in the image below. You just need to update the colum with the correct information and it will update it for you.
 
 <img src="/images/ss3.png" width="500px">
 
