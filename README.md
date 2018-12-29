@@ -21,8 +21,8 @@ __Fetching by card number and set code__
 
 __For all scenarios__
 
-* The multiverse ID column has already a value in it.
-* The active row is less than the `STARTING_ROW`.
+* The multiverse ID column is empty.
+* The active row is greater than the `STARTING_ROW`.
 
 In case you provide invalid values for the card name, set code or card number, the script will let you know by setting the font color to red like shown in the image below. You just need to update the colum with the correct information and it will update it for you.
 
