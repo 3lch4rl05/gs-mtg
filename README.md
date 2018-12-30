@@ -34,4 +34,4 @@ I have also included some menu items to make it easier to refresh info and jump 
 
 This script uses the awesome MTG API provided by [magicthegathering.io](https://magicthegathering.io/) Please consider becoming a [patron](https://www.patreon.com/magicthegathering) to support it!
 
-I'm currently waiting on my dev token application approval from [TCGPlayer](https://www.tcgplayer.com) in order to be able to use their very cool prices API. This will help providing the sell/buy prices for each card in the collection. Will work on it once I get the token. If you are interested in gathering prices as well you should also apply for your own API token. Thanks for checking out my little projects. I hope you find them helpful.
+Also, I recently started using [Scryfall](https://scryfall.com) to improve a little bit how the script works, specially to fetch a higher quality image when clicking on the card image and also, very important, to finally be able to fetch prices!
