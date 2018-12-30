@@ -14,6 +14,7 @@ var TYPE_COL = 10;
 var RARITY_COL = 11;
 var IMAGE_COL = 12;
 var COLOR_COL = 13;
+var PRICE_COL = 14;
 
 var IMG_HEIGHT = 152;
 var IMG_WIDTH = 106;
@@ -50,10 +51,11 @@ function fetchCardData(e) {
   
   if(fireCall == true) {
   
-    var cardInfo = getCardInfo(name.getValue(), set.getValue(), number.getValue());    
+    var cardInfo = getCardInfo(name.getValue(), set.getValue(), number.getValue());   
     if(cardInfo && cardInfo.cards.length>0) {
     
       var card = cardInfo.cards[0];
+      var price = getCardPrice(card.multiverseid);
       var rarityLetter = "C";
       if(card.rarity != "Basic Land") {
         rarityLetter = card.rarity.charAt(0); 
@@ -63,15 +65,16 @@ function fetchCardData(e) {
       sheet.getRange(row, MULTIVERSEID_COL).setValue(card.multiverseid);
       
       //Card name
-      if(sheet.getRange(row, NAME_COL).getValue().length == 0) {
-        sheet.getRange(row, NAME_COL).setValue(card.name);
-      }
+      sheet.getRange(row, NAME_COL).setValue("=HYPERLINK(\"https://img.scryfall.com/cards/border_crop/en/" 
+            + card.set.toLowerCase() + "/" + card.number + ".jpg\",\"" + card.name + "\")");
+      sheet.getRange(row, NAME_COL).setNote(card.text);
       
       //Set name
       sheet.getRange(row, SETNAME_COL).setValue(card.setName);
       
       //Set icon
-      sheet.getRange(row, SETICON_COL).setValue("=IMAGE(\"http://gatherer.wizards.com/Handlers/Image.ashx?type=symbol&set=" + card.set + "&size=medium&rarity=" + rarityLetter + "\")");
+      sheet.getRange(row, SETICON_COL).setValue("=IMAGE(\"http://gatherer.wizards.com/Handlers/Image.ashx?type=symbol&set=" 
+          + card.set + "&size=medium&rarity=" + rarityLetter + "\")");
       
       //Card number
       sheet.getRange(row, NUMBER_COL).setValue(card.number);
@@ -87,7 +90,7 @@ function fetchCardData(e) {
       
       //Color
       var colorCS = "";
-      if(!card.originalType.indexOf("Basic Land") == 0 && card.colors) {
+      if(card.colors) {
         var colorsQty = card.colors.length;
         for(var i=0; i<colorsQty; i++) {
           colorCS = colorCS + card.colors[i];
@@ -95,11 +98,15 @@ function fetchCardData(e) {
             colorCS = colorCS + ", ";
           }
         }
-      } else {
+      } else if(card.originalType.indexOf("Basic Land") == 0) {
         colorCS = card.watermark;
       }
       
       sheet.getRange(row, COLOR_COL).setValue(colorCS);
+      
+      //Price
+      sheet.getRange(row, PRICE_COL).setValue(price);
+      
       sheet.setRowHeight(row, IMG_HEIGHT);
       sheet.setColumnWidth(IMAGE_COL, IMG_WIDTH);
       
@@ -117,21 +124,37 @@ function fetchCardData(e) {
 function getCardInfo(name, set, number) {
 
   var response;
+  var params;
+  
   if(!number) {
     Logger.log("Fetching card info for: [" + name + "," + set + "]");
-    response = UrlFetchApp.fetch("https://api.magicthegathering.io/v1/cards?name="+name+"&set="+set);
+    params = "name="+name+"&set="+set;
   } else {
     Logger.log("Fetching card info for: [" + set + "," + number + "]");
-    response = UrlFetchApp.fetch("https://api.magicthegathering.io/v1/cards?number="+number+"&set="+set);
+    params = "number="+number+"&set="+set;
   }
   
+  response = UrlFetchApp.fetch("https://api.magicthegathering.io/v1/cards?" + params);
   var json = response.getContentText();
   var data = JSON.parse(response);
   return data;
 }
 
-function refreshPrices() {
-  //waiting on my token approval...
+function getCardPrice(multiverseid) {
+
+  var response = UrlFetchApp.fetch("https://api.scryfall.com/cards/multiverse/" + multiverseid);
+  var json = response.getContentText();
+  var data = JSON.parse(response);
+  return data.usd;
+}
+
+function refreshPrices(row) {
+
+  for(var i=row; i<=sheet.getLastRow(); i++) {
+    var midCol = sheet.getRange(i, MULTIVERSEID_COL);
+    var newPrice = getCardPrice(midCol.getValue());
+    sheet.getRange(i, PRICE_COL).setValue(newPrice);
+  }
 }
 
 function refreshRow(row) {
@@ -179,7 +202,6 @@ function onOpen(e) {
 function askForRow() {
   var response = ui.prompt("Row number:");
   return response.getResponseText();
-  
 }
 
 function askForRowToRefresh() {
