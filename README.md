@@ -34,4 +34,4 @@ I have also included some menu items to make it easier to refresh info and jump 
 
 This script uses the awesome MTG API provided by [magicthegathering.io](https://magicthegathering.io/) Please consider becoming a [patron](https://www.patreon.com/magicthegathering) to support it!
 
-Also, I recently started using [Scryfall](https://scryfall.com) to improve a little bit how the script works, specially to fetch a higher quality image when clicking on the card image and also, very important, to finally be able to fetch prices!
+Also, I recently started using [Scryfall](https://scryfall.com) to improve a little bit how the script works, specially to fetch a higher quality image and also, very important, to finally be able to fetch prices! Please also consider [donating](https://scryfall.com/donate) so they can continue with the really cool work!
