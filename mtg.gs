@@ -67,7 +67,11 @@ function fetchCardData(e) {
       //Card name
       sheet.getRange(row, NAME_COL).setValue("=HYPERLINK(\"https://img.scryfall.com/cards/border_crop/en/" 
             + card.set.toLowerCase() + "/" + card.number + ".jpg\",\"" + card.name + "\")");
-      sheet.getRange(row, NAME_COL).setNote(card.text);
+            
+      //Text
+      if(card.rarity != "Basic Land") {
+        sheet.getRange(row, NAME_COL).setNote(card.text);
+      }
       
       //Set name
       sheet.getRange(row, SETNAME_COL).setValue(card.setName);
@@ -98,7 +102,8 @@ function fetchCardData(e) {
             colorCS = colorCS + ", ";
           }
         }
-      } else if(card.originalType.indexOf("Basic Land") == 0) {
+      } else if(card.rarity == "Basic Land"
+          && card.watermark != "Colorless") {
         colorCS = card.watermark;
       }
       
@@ -110,11 +115,13 @@ function fetchCardData(e) {
       sheet.setRowHeight(row, IMG_HEIGHT);
       sheet.setColumnWidth(IMAGE_COL, IMG_WIDTH);
       
+      number.setFontColor("#000000");
       name.setFontColor("#000000");
       set.setFontColor("#000000");
       
     } else {
     
+      number.setFontColor("#FF0000");
       name.setFontColor("#FF0000");
       set.setFontColor("#FF0000");
     }
