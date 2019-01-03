@@ -201,7 +201,7 @@ function onOpen(e) {
     .addSubMenu(SpreadsheetApp.getUi().createMenu('Refresh')
       .addItem("Refresh Row", "askForRowToRefresh")
       .addItem("Refresh From Row", "askForRowRefreshFrom")
-      .addItem("Refresh Prices Only", "refreshPrices")
+      .addItem("Refresh Prices Only", "askForRowToRefreshPrices")
       .addItem("Refresh All", "refreshAll"))
     .addToUi();
 }
@@ -217,4 +217,8 @@ function askForRowToRefresh() {
 
 function askForRowRefreshFrom() {
   refreshFromRow(askForRow());
+}
+
+function askForRowToRefreshPrices() {
+  refreshPrices(askForRow());
 }
