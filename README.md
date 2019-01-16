@@ -1,7 +1,7 @@
 # gs-mtg
 Google sheets MTG (Magic the Gathering) apps script to fetch card info and prices.  
 
-![Table example](/images/ss1.png)  
+<img src="/images/ss1.png" width="500px">
 
 The [mtg.gs](mtg.gs) script is intended to be used inside a Google Sheet app script code. To access the apps script code associated with your Google Sheets sheet just click **Tools > Script editor** menu item. More info on Apps script [here](https://developers.google.com/apps-script/guides/sheets). 
 
@@ -30,7 +30,6 @@ In case you provide invalid values for the card name, set code or card number, t
 
 I have also included some menu items to make it easier to refresh info and jump to the last row.
 
-<img src="/images/ss2.png" width="500px">
 
 This script uses the awesome MTG API provided by [magicthegathering.io](https://magicthegathering.io/) Please consider becoming a [patron](https://www.patreon.com/magicthegathering) to support it!
 
