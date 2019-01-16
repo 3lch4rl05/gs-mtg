@@ -5,6 +5,7 @@ var ui = SpreadsheetApp.getUi();
 var MINIMUM_LENGTH = 3;
 var STARTING_ROW = 3;
 var MULTIVERSEID_COL = 2;
+var FOIL_COL = 4;
 var NAME_COL = 5;
 var SET_COL = 6;
 var SETNAME_COL = 7;
@@ -55,7 +56,8 @@ function fetchCardData(e) {
     if(cardInfo && cardInfo.cards.length>0) {
     
       var card = cardInfo.cards[0];
-      var price = getCardPrice(card.multiverseid);
+      var isFoil = sheet.getRange(row, FOIL_COL).getValue() == "Si";
+      var price = getCardBuyPrice(card.name, getGroupByAbr(set.getValue()), isFoil);
       var rarityLetter = "C";
       if(card.rarity != "Basic Land") {
         rarityLetter = card.rarity.charAt(0); 
@@ -147,19 +149,97 @@ function getCardInfo(name, set, number) {
   return data;
 }
 
-function getCardPrice(multiverseid) {
-
-  var response = UrlFetchApp.fetch("https://api.scryfall.com/cards/multiverse/" + multiverseid);
-  var json = response.getContentText();
-  var data = JSON.parse(response);
-  return data.usd;
+function getCardProdId(cardName, setName) {
+  
+  var search_filters = {
+	"filters": [
+      {
+        "name":"ProductName",
+		"values": [
+          cardName
+		]
+      },
+      {
+		"name":"SetName",
+		"values": [
+          setName
+		]
+      }
+	]
+  }
+  
+  options_search.payload = JSON.stringify(search_filters);
+  Logger.log("Filters: " + options_search.payload);
+  var response = UrlFetchApp.fetch("https://api.tcgplayer.com/v1.19.0/catalog/categories/1/search/", options_search);
+  if(response.getResponseCode() == 200) {
+    var json = response.getContentText();
+    var data = JSON.parse(response);
+    Logger.log(data);
+    var prodId = data.results[0];
+    return prodId;
+  } else {
+    Logger.log(response)
+    return null;
+  }
 }
 
-function refreshPrices(row) {
+function getCardSKU(prodId, printing) {
 
-  for(var i=row; i<=sheet.getLastRow(); i++) {
-    var midCol = sheet.getRange(i, MULTIVERSEID_COL);
-    var newPrice = getCardPrice(midCol.getValue());
+  var response = UrlFetchApp.fetch("https://api.tcgplayer.com/v1.19.0/catalog/products/" + prodId + "/skus", options);
+  var json = response.getContentText();
+  var data = JSON.parse(response);
+  for(var i=0; i<data.results.length; i++) {
+    var sku = data.results[i];    
+    if(sku.languageId == ENGLISH
+      && sku.printingId == printing
+      && sku.conditionId == NEAR_MINT) {
+        Logger.log(sku.skuId);
+        return sku.skuId;
+    }
+  }  
+}
+
+function getPriceBySKU(skuId) {
+
+  var response = UrlFetchApp.fetch("http://api.tcgplayer.com/v1.19.0/pricing/buy/sku/" + skuId, options);
+  var json = response.getContentText();
+  var data = JSON.parse(response);
+  return data.results[0].prices.market;
+}
+
+function getCardBuyPrice(cardName, setName, isFoil) {
+  
+  var prodId = getCardProdId(cardName, setName);
+  Logger.log("ProdID found: " + prodId);
+  if(prodId != null) {
+  
+    var printing = NORMAL_PRINT;
+    
+    if(isFoil) {
+      printing = FOIL_PRINT;
+    }
+    
+    var skuId = getCardSKU(prodId, printing);
+    Logger.log("SKU for: " + prodId + " and " + printing + ": " + skuId);
+    var buyPrice = getPriceBySKU(skuId);
+    Logger.log("Price: " + buyPrice);
+    return buyPrice;
+  } else {
+    return "N/A";
+  }
+}
+ 
+function refreshBuyPrices(row, lastRow) {
+
+  if(!lastRow) {
+    lastRow = sheet.getLastRow();
+  }
+
+  for(var i=row; i<=lastRow; i++) {
+    var name = sheet.getRange(i, NAME_COL).getValue();
+    var setName = getGroupByAbr(sheet.getRange(i, SET_COL).getValue());
+    var isFoil = sheet.getRange(i, FOIL_COL).getValue() == "Si";
+    var newPrice = getCardBuyPrice(name, setName, isFoil);
     sheet.getRange(i, PRICE_COL).setValue(newPrice);
   }
 }
@@ -175,8 +255,12 @@ function refreshRow(row) {
   fetchCardData(e);
 }
 
-function refreshFromRow(row) {
+function refreshFromRow(row, lastRow) {
 
+  if(!lastRow) {
+    lastRow = sheet.getLastRow();
+  }
+  
   Logger.log("Refreshing cards info from row " + row + "...");
   for(var i=row; i<=sheet.getLastRow(); i++) {
     refreshRow(i);
@@ -202,23 +286,33 @@ function onOpen(e) {
       .addItem("Refresh Row", "askForRowToRefresh")
       .addItem("Refresh From Row", "askForRowRefreshFrom")
       .addItem("Refresh Prices Only", "askForRowToRefreshPrices")
+      .addItem("Refresh sets cache", "fetchGroupsWithModal")
       .addItem("Refresh All", "refreshAll"))
     .addToUi();
 }
 
-function askForRow() {
-  var response = ui.prompt("Row number:");
+function askForStartRow() {
+  var response = ui.prompt("Start from row number:");
+  return response.getResponseText();
+}
+
+function askForEndRow() {
+  var response = ui.prompt("End row number:");
   return response.getResponseText();
 }
 
 function askForRowToRefresh() {
-  refreshRow(askForRow());
+  refreshRow(askForStartRow());
 }
 
 function askForRowRefreshFrom() {
-  refreshFromRow(askForRow());
+  refreshFromRow(askForStartRow(), askForEndRow());
 }
 
 function askForRowToRefreshPrices() {
-  refreshPrices(askForRow());
+  refreshBuyPrices(askForStartRow(), askForEndRow());
+}
+
+function fetchGroupsWithModal() {
+  initiateCategoryGroupsFetch(true);
 }
